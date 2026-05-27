@@ -16,6 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug secrets
+        run: |
+          if [ -z "${{ secrets.CR_PAT }}" ]; then
+            echo "CR_PAT is empty"
+          else
+            echo "CR_PAT is set"
+          fi
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
