@@ -24,6 +24,64 @@ export interface ExternalIds {
 	tvMazeId?: string;
 }
 
+export function parseMediaIdsFromString(input: string): ExternalIds {
+	const ids: ExternalIds = {};
+
+	// Patterns for Plex format (curly braces): {imdb-tt12345}, {tmdb-12345}, etc.
+	// Patterns for Jellyfin format (square brackets with hyphens): [imdbid-12345], [tmdbid-12345], etc.
+	// Patterns for Emby format (square brackets with equals signs): [imdbid=12345], [tmdbid=12345], etc.
+
+	const idPatterns = [
+		{
+			// Matches: {imdb-tt12345}, {imdbid-tt12345}, {imdb-12345}, [imdb-12345], [imdbid-12345], [imdb=12345], [imdbid=12345], imdb-12345
+			regex: /[{[]?imdb(?:id)?[-=](tt)?\d+[}\]]?/gi,
+			key: "imdbId" as const,
+		},
+		{
+			// Matches: {tmdb-12345}, {tmdbid-12345}, [tmdb-12345], [tmdbid-12345], [tmdb=12345], [tmdbid=12345], tmdb-12345
+			regex: /[{[]?tmdb(?:id)?[-=]\d+[}\]]?/gi,
+			key: "tmdbId" as const,
+		},
+		{
+			// Matches: {tvdb-12345}, {tvdbid-12345}, [tvdb-12345], [tvdbid-12345], [tvdb=12345], [tvdbid=12345], tvdb-12345
+			regex: /[{[]?tvdb(?:id)?[-=]\d+[}\]]?/gi,
+			key: "tvdbId" as const,
+		},
+		{
+			// Matches: {tvmaze-12345}, {tvmazeid-12345}, [tvmaze-12345], [tvmazeid-12345], [tvmaze=12345], [tvmazeid=12345], tvmaze-12345
+			regex: /[{[]?tvmaze(?:id)?[-=]\d+[}\]]?/gi,
+			key: "tvMazeId" as const,
+		},
+	];
+
+	for (const { regex, key } of idPatterns) {
+		const matches = input.match(regex);
+		if (matches) {
+			for (const match of matches) {
+				// Extract the actual ID value from the match
+				const idMatch = match.match(/\d+/g);
+				if (idMatch) {
+					const value = idMatch.join("");
+					// For IMDb IDs, preserve the 'tt' prefix with original case if it was present
+					if (key === "imdbId") {
+						const ttMatch = match.match(/[-=](tt)(\d+)/i);
+						if (ttMatch) {
+							ids[key] = `${ttMatch[1]}${value}`; // Preserve original case of 'tt'
+						} else {
+							ids[key] = value;
+						}
+					} else {
+						ids[key] = value;
+					}
+					break; // Only take the first match for each ID type
+				}
+			}
+		}
+	}
+
+	return ids;
+}
+
 export function arrIdsEqual(
 	a: ExternalIds | undefined,
 	b: ExternalIds | undefined,
