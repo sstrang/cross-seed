@@ -280,6 +280,15 @@ export async function scanAllArrsForMedia(
 	mediaType: MediaType,
 	searcheePath?: string,
 ): Promise<Result<ParsedMedia, boolean>> {
+	// Log build info for debugging (first call only)
+	if (!process.env.BRANCH_LOGGED) {
+		logger.debug({
+			label: Label.ARRS,
+			message: `Running build: ${process.env.BUILD_BRANCH || "unknown"} (${process.env.BUILD_COMMIT_SHA?.substring(0, 7) || "unknown"})`,
+		});
+		process.env.BRANCH_LOGGED = "true";
+	}
+
 	// First, try parsing IDs from filename and folder path as fallback
 	const title =
 		mediaType !== MediaType.VIDEO
@@ -294,10 +303,29 @@ export async function scanAllArrsForMedia(
 			searcheePath.split("/").pop() ||
 			searcheePath.split("\\").pop() ||
 			searcheePath;
+		logger.debug({
+			label: Label.ARRS,
+			message: `Extracting folder name: ${folderName} from path: ${searcheePath}`,
+		});
 		folderIds = parseMediaIdsFromString(folderName);
+		logger.debug({
+			label: Label.ARRS,
+			message: `Folder IDs found: ${Object.keys(folderIds).length > 0 ? formatFoundIds(folderIds) : "NONE"}`,
+		});
+	} else {
+		logger.debug({
+			label: Label.ARRS,
+			message: `No folder path provided for ${searcheeTitle}`,
+		});
 	}
 	// Merge IDs: filename takes precedence over folder for same ID type
 	const parsedIds = { ...folderIds, ...filenameIds };
+
+	// Log what we found from parsing
+	logger.debug({
+		label: Label.ARRS,
+		message: `Filename IDs: ${Object.keys(filenameIds).length > 0 ? formatFoundIds(filenameIds) : "NONE"}`,
+	});
 
 	// If we got IDs from parsing, create a ParsedMedia object
 	if (Object.values(parsedIds).some(isTruthy)) {
