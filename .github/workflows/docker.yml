@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - feature/media-id-parsing-from-folders-and-files
+      - feature/data-directory-media-type-selection
 
 jobs:
   build:
@@ -37,4 +38,6 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/sstrang/cross-seed:dev
+          tags: |
+            ghcr.io/sstrang/cross-seed:dev
+            ghcr.io/sstrang/cross-seed:${{ github.ref_name }}
