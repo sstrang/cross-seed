@@ -304,10 +304,31 @@ export async function scanAllArrsForMedia(
 	let folderIds: ExternalIds = {};
 	if (searcheePath) {
 		// Extract folder name from path (works with both Unix and Windows paths)
-		const folderName =
-			searcheePath.split("/").pop() ||
-			searcheePath.split("\\").pop() ||
-			searcheePath;
+		// Extract parent folder name from path (works with both Unix and Windows paths)
+		// Get the parent directory that contains the media ID, not the filename
+		const pathSeparator = searcheePath.includes("/") ? "/" : "\\";
+		const pathParts = searcheePath.split(pathSeparator);
+		// Remove the last element (filename) to get the parent folder
+		pathParts.pop();
+		const folderName = pathParts.pop() || searcheePath;
+		logger.debug({
+			label: Label.ARRS,
+			message: `Extracting parent folder name: ${folderName} from path: ${searcheePath}`,
+		});
+		folderIds = parseMediaIdsFromString(folderName);
+		logger.debug({
+			label: Label.ARRS,
+			message: `Parent folder IDs found: ${Object.keys(folderIds).length > 0 ? formatFoundIds(folderIds) : "NONE"}`,
+		});
+
+		// Also extract from filename for robustness
+		const filenameParts = searcheePath.split(pathSeparator);
+		const filename = filenameParts[filenameParts.length - 1];
+		const filenameIds = parseMediaIdsFromString(filename);
+		logger.debug({
+			label: Label.ARRS,
+			message: `Filename from path IDs found: ${Object.keys(filenameIds).length > 0 ? formatFoundIds(filenameIds) : "NONE"}`,
+		});
 		logger.debug({
 			label: Label.ARRS,
 			message: `Extracting folder name: ${folderName} from path: ${searcheePath}`,
