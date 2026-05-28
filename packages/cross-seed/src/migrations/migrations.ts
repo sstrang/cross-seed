@@ -16,6 +16,7 @@ import indexerEnabledFlag from "./14-indexer-enabled-flag.js";
 import removeUrlUniqueConstraint from "./15-remove-url-unique-constraint.js";
 import pruneInactiveIndexers from "./16-prune-inactive-indexers.js";
 import apiKeySettingsJson from "./17-api-key-settings-json.js";
+import dataDirectoryMediaType from "./18-data-directory-media-type.js";
 
 export const migrations = {
 	getMigrations: () =>
@@ -38,6 +39,7 @@ export const migrations = {
 			removeUrlUniqueConstraint,
 			pruneInactiveIndexers,
 			apiKeySettingsJson,
+			dataDirectoryMediaType,
 		]),
 	getMigrationName: (migration) => migration.name,
 	getMigration: (migration) => migration,

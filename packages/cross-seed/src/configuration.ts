@@ -13,7 +13,7 @@ import {
 } from "./constants.js";
 import { CrossSeedError } from "./errors.js";
 import { RuntimeConfig } from "./runtimeConfig.js";
-import { WebhookEntry } from "@cross-seed/shared/configSchema";
+import { WebhookEntry, DataDirectory } from "@cross-seed/shared/configSchema";
 import { omitUndefined } from "./utils/object.js";
 
 const require = createRequire(import.meta.url);
@@ -32,7 +32,7 @@ export interface FileConfig {
 	excludeOlder?: string;
 	excludeRecentSearch?: string;
 	useClientTorrents?: boolean;
-	dataDirs?: string[];
+	dataDirs?: (string | DataDirectory)[];
 	matchMode?: MatchMode;
 	skipRecheck?: boolean;
 	autoResumeMaxDownload?: number;
@@ -193,6 +193,20 @@ export function transformFileConfig(
 
 	if (isStringArray(fileConfig.dataDirs)) {
 		result.dataDirs = fileConfig.dataDirs;
+	} else if (Array.isArray(fileConfig.dataDirs)) {
+		// Handle new format: array of strings or objects with path and mediaType
+		result.dataDirs = fileConfig.dataDirs.map((dir) => {
+			if (typeof dir === "string") {
+				return dir;
+			} else if (
+				typeof dir === "object" &&
+				dir !== null &&
+				"path" in dir
+			) {
+				return dir;
+			}
+			return dir;
+		}) as DataDirectory[];
 	}
 
 	if (

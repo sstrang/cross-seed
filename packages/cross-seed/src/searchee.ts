@@ -133,7 +133,52 @@ export function getSearcheeSource(searchee: Searchee): SearcheeSource {
 	}
 }
 
-export function getMediaType({ title, files }: Searchee): MediaType {
+/**
+ * Finds the configured media type for a searchee based on its path
+ * @param searcheePath - The path of the searchee
+ * @returns The configured media type if found, otherwise undefined
+ */
+function findConfiguredMediaType(searcheePath?: string): MediaType | undefined {
+	if (!searcheePath) return undefined;
+
+	const { dataDirs } = getRuntimeConfig();
+	if (!Array.isArray(dataDirs) || dataDirs.length === 0) return undefined;
+
+	for (const dir of dataDirs) {
+		let dirPath: string;
+		let mediaType: MediaType | undefined;
+
+		if (typeof dir === "string") {
+			dirPath = dir;
+			mediaType = undefined; // No media type configured for this directory
+		} else if (typeof dir === "object" && dir !== null && "path" in dir) {
+			dirPath = dir.path;
+			mediaType = dir.mediaType;
+		} else {
+			continue;
+		}
+
+		// Check if the searchee path is within this configured directory
+		if (
+			searcheePath.startsWith(dirPath) ||
+			searcheePath.startsWith(dirPath + "/")
+		) {
+			return mediaType;
+		}
+	}
+
+	return undefined;
+}
+
+export function getMediaType(searchee: Searchee): MediaType {
+	// First, check if there's a configured media type for this searchee's directory
+	const configuredMediaType = findConfiguredMediaType(searchee.path);
+	if (configuredMediaType) {
+		return configuredMediaType;
+	}
+
+	// Fall back to the original heuristic-based detection
+	const { title, files } = searchee;
 	switch (true /* eslint-disable no-fallthrough */) {
 		case EP_REGEX.test(title):
 			return MediaType.EPISODE;

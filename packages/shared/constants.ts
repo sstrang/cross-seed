@@ -32,6 +32,17 @@ export enum BlocklistType {
 	SIZE_ABOVE = "sizeAbove",
 	LEGACY = "legacy",
 }
+
+export enum MediaType {
+	EPISODE = "episode",
+	SEASON = "pack",
+	MOVIE = "movie",
+	ANIME = "anime",
+	VIDEO = "video",
+	AUDIO = "audio",
+	BOOK = "book",
+	OTHER = "unknown",
+}
 export const NEWLINE_INDENT = "\n\t\t\t\t";
 
 /**

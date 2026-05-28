@@ -1,4 +1,4 @@
-import { LinkType } from '../../../../shared/constants';
+import { LinkType, MediaType } from '../../../../shared/constants';
 import { z } from 'zod';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { pickSchemaFields } from '@/lib/pick-schema-fields';
 import { createFileRoute } from '@tanstack/react-router';
 import { Page } from '@/components/Page';
 import { useSettingsFormSubmit } from '@/hooks/use-settings-form-submit';
-import { RuntimeConfig } from '../../../../shared/configSchema';
+import { RuntimeConfig, DataDirectory } from '../../../../shared/configSchema';
 
 type DirectoryFormData = z.infer<typeof directoryValidationSchema>;
 
@@ -100,51 +100,105 @@ function DirectorySettings() {
                           )}
                         </Label>
                         {field.state.value.map(
-                          (_value: string, index: number) => (
-                            <form.Field
-                              key={`${field.name}-${index}`}
-                              name={`dataDirs[${index}]`}
-                              validators={{
-                                onBlur: z.string(),
-                              }}
-                            >
-                              {(subfield) => (
-                                <div className="mb-3 flex flex-col gap-y-1">
-                                  <div className="flex items-center gap-2">
+                          (value: string | DataDirectory, index: number) => {
+                            const dirPath = typeof value === 'string' ? value : value.path;
+                            const mediaType = typeof value === 'string' ? undefined : value.mediaType;
+
+                            return (
+                              <div key={`${field.name}-${index}`} className="mb-3 space-y-2 rounded-lg border p-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1">
+                                    <Label htmlFor={`${field.name}-${index}-path`} className="text-xs">
+                                      Path
+                                    </Label>
                                     <Input
+                                      id={`${field.name}-${index}-path`}
                                       type="text"
-                                      className="form-input"
-                                      value={subfield.state.value}
+                                      className="form-input mt-1"
+                                      value={dirPath}
+                                      placeholder="/path/to/media"
                                       aria-invalid={
                                         !!(
-                                          subfield.state.meta.isTouched &&
-                                          subfield.state.meta.errorMap.onBlur
+                                          field.state.meta.isTouched &&
+                                          field.state.meta.errorMap.onBlur
                                         )
                                       }
-                                      onBlur={subfield.handleBlur}
-                                      onChange={(e) =>
-                                        subfield.handleChange(e.target.value)
-                                      }
+                                      onBlur={(e) => {
+                                        field.state.value[index] = mediaType
+                                          ? { path: e.target.value, mediaType }
+                                          : e.target.value;
+                                        field.handleChange(field.state.value);
+                                      }}
+                                      onChange={(e) => {
+                                        const newValue = mediaType
+                                          ? { path: e.target.value, mediaType }
+                                          : e.target.value;
+                                        const updatedValues = [...field.state.value];
+                                        updatedValues[index] = newValue;
+                                        field.handleChange(updatedValues);
+                                      }}
                                     />
-                                    {field.state.value.length > 1 && (
-                                      <DeleteOption
-                                        onClick={() => {
-                                          field.removeValue(index);
-                                        }}
-                                      />
-                                    )}
                                   </div>
 
-                                  {subfield.state.meta.isTouched &&
-                                    subfield.state.meta.errors && (
-                                      <FieldInfo
-                                        fieldMeta={subfield.state.meta}
-                                      />
-                                    )}
+                                  <div className="w-40">
+                                    <Label htmlFor={`${field.name}-${index}-mediaType`} className="text-xs">
+                                      Media Type
+                                    </Label>
+                                    <form.Field
+                                      name={`${field.name}[${index}].mediaType`}
+                                      validators={{
+                                        onBlur: z.nativeEnum(MediaType).optional(),
+                                      }}
+                                    >
+                                      {(mediaField) => (
+                                        <div className="mt-1">
+                                          <select
+                                            id={`${field.name}-${index}-mediaType`}
+                                            className="w-full rounded-md border px-3 py-2 text-sm"
+                                            value={mediaType ?? ''}
+                                            onChange={(e) => {
+                                              const selectedMediaType = e.target.value === ''
+                                                ? undefined
+                                                : e.target.value as MediaType;
+                                              const newValue = selectedMediaType
+                                                ? { path: dirPath, mediaType: selectedMediaType }
+                                                : dirPath;
+                                              const updatedValues = [...field.state.value];
+                                              updatedValues[index] = newValue;
+                                              field.handleChange(updatedValues);
+                                            }}
+                                          >
+                                            <option value="">Auto-detect</option>
+                                            {Object.entries(MediaType).map(([key, value]) => (
+                                              <option key={key} value={value}>
+                                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      )}
+                                    </form.Field>
+                                  </div>
+
+                                  {field.state.value.length > 1 && (
+                                    <DeleteOption
+                                      onClick={() => {
+                                        field.removeValue(index);
+                                      }}
+                                      className="mt-4"
+                                    />
+                                  )}
                                 </div>
-                              )}
-                            </form.Field>
-                          ),
+
+                                {field.state.meta.isTouched &&
+                                  field.state.meta.errors && (
+                                    <FieldInfo
+                                      fieldMeta={field.state.meta}
+                                    />
+                                  )}
+                              </div>
+                            );
+                          },
                         )}
                         <Button
                           variant="secondary"

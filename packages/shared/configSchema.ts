@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Action, LinkType, MatchMode } from "./constants.js";
+import { Action, LinkType, MatchMode, MediaType } from "./constants.js";
 
 export const WebhookObjectSchema = z.object({
 	url: z.string().url(),
@@ -9,11 +9,22 @@ export const WebhookObjectSchema = z.object({
 
 export type WebhookEntry = string | z.infer<typeof WebhookObjectSchema>;
 
+// Data directory can be either a string path or an object with path and optional mediaType
+export const DataDirectorySchema = z.union([
+	z.string(),
+	z.object({
+		path: z.string(),
+		mediaType: z.nativeEnum(MediaType).optional(),
+	}),
+]);
+
+export type DataDirectory = z.infer<typeof DataDirectorySchema>;
+
 export const RUNTIME_CONFIG_SCHEMA = z.object({
 	delay: z.number().int().min(30).max(3600),
 	torznab: z.array(z.string()),
 	useClientTorrents: z.boolean(),
-	dataDirs: z.array(z.string()),
+	dataDirs: z.array(DataDirectorySchema),
 	matchMode: z.nativeEnum(MatchMode),
 	skipRecheck: z.boolean(),
 	autoResumeMaxDownload: z.number().int().min(0).max(52_428_800),

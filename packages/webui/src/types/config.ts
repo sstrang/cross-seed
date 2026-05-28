@@ -1,6 +1,14 @@
 import { z } from 'zod';
-import { Action, LinkType, ZodErrorMessages } from '../../../shared/constants';
-import { RUNTIME_CONFIG_SCHEMA } from '../../../shared/configSchema';
+import {
+  Action,
+  LinkType,
+  MediaType,
+  ZodErrorMessages,
+} from '../../../shared/constants';
+import {
+  RUNTIME_CONFIG_SCHEMA,
+  DataDirectorySchema,
+} from '../../../shared/configSchema';
 
 const runtimeShape = RUNTIME_CONFIG_SCHEMA.shape;
 
@@ -113,7 +121,7 @@ export const connectValidationSchema = z.object({
 });
 
 export const directoryValidationSchema = z.object({
-  dataDirs: z.array(z.string()).transform((v) => v ?? []),
+  dataDirs: z.array(DataDirectorySchema).transform((v) => v ?? []),
   flatLinking: z
     .boolean()
     .transform((v) => (typeof v === 'boolean' ? v : false)),
