@@ -733,6 +733,7 @@ export default class RTorrent implements TorrentClient {
 			const title = parseTitle(name, files) ?? name;
 			const searchee: SearcheeClient = {
 				name,
+				infoHash,
 				title,
 				files,
 				length,
