@@ -50,9 +50,12 @@ jobs:
           build-args: |
             BUILD_COMMIT_SHA=${{ github.sha }}
             BUILD_BRANCH=${{ github.ref_name }}
-            BUILD_TAG=${{ github.ref_name }}
-            BUILD_MESSAGE=${{ github.event.head_commit.message }}
-            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            BUILD_TAG=${{ github.ref_NAME }}
+            BUILD_MESSAGE=Built from ${{ github.ref_name }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
 
       - name: Image digest
         run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+      - name: Test Docker image
+        run: docker run --rm ghcr.io/${{ github.repository_owner }}/cross-seed:feature-media-id-parsing-from-folders-and-files --version
