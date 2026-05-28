@@ -971,7 +971,11 @@ async function getAndLogIndexers(
 	const searchStr = await getSearchString(searchee);
 	if (cachedSearch.q === searchStr) {
 		shouldScanArr = false;
-		const res = await scanAllArrsForMedia(searchee.title, mediaType);
+		const res = await scanAllArrsForMedia(
+			searchee.title,
+			mediaType,
+			searchee.path,
+		);
 		parsedMedia = res.orElse(undefined);
 		const ids = parsedMedia?.movie ?? parsedMedia?.series;
 		if (!arrIdsEqual(ids, cachedSearch.ids)) {
@@ -1040,7 +1044,11 @@ async function getAndLogIndexers(
 	}
 
 	if (shouldScanArr) {
-		const res = await scanAllArrsForMedia(searchee.title, mediaType);
+		const res = await scanAllArrsForMedia(
+			searchee.title,
+			mediaType,
+			searchee.path,
+		);
 		parsedMedia = res.orElse(undefined);
 		cachedSearch.ids = parsedMedia?.movie ?? parsedMedia?.series;
 	}

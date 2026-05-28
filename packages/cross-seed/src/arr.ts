@@ -244,18 +244,76 @@ function getRelevantArrInstances(mediaType: MediaType): string[] {
 	}
 }
 
+function createParsedMediaFromIds(
+	ids: ExternalIds,
+	mediaType: MediaType,
+): ParsedMedia {
+	// Determine if this should be a movie or series based on media type
+	const isMovie = mediaType === MediaType.MOVIE;
+	const isSeries =
+		mediaType === MediaType.EPISODE || mediaType === MediaType.SEASON;
+
+	if (isMovie) {
+		return {
+			movie: ids,
+			series: undefined,
+			episodes: undefined,
+		};
+	} else if (isSeries) {
+		return {
+			movie: undefined,
+			series: ids,
+			episodes: [],
+		};
+	} else {
+		// For other media types, default to series format
+		return {
+			movie: undefined,
+			series: ids,
+			episodes: undefined,
+		};
+	}
+}
+
 export async function scanAllArrsForMedia(
 	searcheeTitle: string,
 	mediaType: MediaType,
+	searcheePath?: string,
 ): Promise<Result<ParsedMedia, boolean>> {
-	const uArrLs = getRelevantArrInstances(mediaType);
-	if (uArrLs.length === 0) {
-		return resultOfErr(false);
-	}
+	// First, try parsing IDs from filename and folder path as fallback
 	const title =
 		mediaType !== MediaType.VIDEO
 			? searcheeTitle.match(SCENE_TITLE_REGEX)!.groups!.title
 			: cleanseSeparators(stripMetaFromName(searcheeTitle));
+
+	const filenameIds = parseMediaIdsFromString(searcheeTitle);
+	let folderIds: ExternalIds = {};
+	if (searcheePath) {
+		// Extract folder name from path (works with both Unix and Windows paths)
+		const folderName =
+			searcheePath.split("/").pop() ||
+			searcheePath.split("\\").pop() ||
+			searcheePath;
+		folderIds = parseMediaIdsFromString(folderName);
+	}
+	// Merge IDs: filename takes precedence over folder for same ID type
+	const parsedIds = { ...folderIds, ...filenameIds };
+
+	// If we got IDs from parsing, create a ParsedMedia object
+	if (Object.values(parsedIds).some(isTruthy)) {
+		const parsedMedia = createParsedMediaFromIds(parsedIds, mediaType);
+		logger.verbose({
+			label: Label.ARRS,
+			message: `Found media IDs from filename/folder for ${chalk.green.bold(searcheeTitle)} -> ${formatFoundIds(parsedIds)}`,
+		});
+		return resultOf(parsedMedia);
+	}
+
+	// No IDs from parsing, try Arr instances
+	const uArrLs = getRelevantArrInstances(mediaType);
+	if (uArrLs.length === 0) {
+		return resultOfErr(false);
+	}
 	let error = new Error(
 		`No ids found for ${title} | MediaType: ${mediaType.toUpperCase()}`,
 	);

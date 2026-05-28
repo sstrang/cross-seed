@@ -19,10 +19,7 @@ import { clientValidationSchema } from '@/types/config';
 import { useSaveConfigHook } from '@/hooks/saveFormHook';
 import useConfigForm from '@/hooks/use-config-form';
 import { FormValidationProvider } from '@/contexts/Form/form-validation-provider';
-import {
-  buildClientUrl,
-  buildClientTestUrl,
-} from './lib/urls';
+import { buildClientUrl, buildClientTestUrl } from './lib/urls';
 import { TDownloadClient } from '@/types/download-clients';
 import { testConnection } from '@/lib/test-connection';
 // import { Label as Labels } from '../../../../../src/logger';
