@@ -295,6 +295,11 @@ export async function scanAllArrsForMedia(
 			? searcheeTitle.match(SCENE_TITLE_REGEX)!.groups!.title
 			: cleanseSeparators(stripMetaFromName(searcheeTitle));
 
+	logger.debug({
+		label: Label.ARRS,
+		message: `scanAllArrsForMedia called with title: "${searcheeTitle}", path: "${searcheePath || "undefined"}"`,
+	});
+
 	const filenameIds = parseMediaIdsFromString(searcheeTitle);
 	let folderIds: ExternalIds = {};
 	if (searcheePath) {
