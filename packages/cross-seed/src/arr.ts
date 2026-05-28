@@ -270,7 +270,7 @@ function createParsedMediaFromIds(
 		return {
 			movie: undefined,
 			series: ids,
-			episodes: undefined,
+			episodes: [],
 		};
 	}
 }
