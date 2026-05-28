@@ -732,7 +732,6 @@ export default class RTorrent implements TorrentClient {
 			);
 			const title = parseTitle(name, files) ?? name;
 			const searchee: SearcheeClient = {
-				infoHash,
 				name,
 				title,
 				files,
@@ -741,6 +740,7 @@ export default class RTorrent implements TorrentClient {
 				savePath,
 				tags,
 				trackers,
+				path: isMultiFile ? join(basename(directory), name) : name,
 			};
 			newSearchees.push(searchee);
 			searchees.push(searchee);

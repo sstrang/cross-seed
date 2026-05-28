@@ -848,6 +848,7 @@ export default class QBittorrent implements TorrentClient {
 				category,
 				tags,
 				trackers,
+				path: savePath && name ? path.join(savePath, name) : undefined,
 			};
 			newSearchees.push(searchee);
 			searchees.push(searchee);

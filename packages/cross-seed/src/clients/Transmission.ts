@@ -1,6 +1,6 @@
 import { readdir } from "fs/promises";
 import ms from "ms";
-import { basename } from "path";
+import { basename, join } from "path";
 import { inspect } from "util";
 import { humanReadableSize } from "@cross-seed/shared/utils";
 import {
@@ -431,6 +431,7 @@ export default class Transmission implements TorrentClient {
 				savePath,
 				tags,
 				trackers,
+				path: savePath && name ? join(savePath, name) : undefined,
 			};
 			newSearchees.push(searchee);
 			searchees.push(searchee);
