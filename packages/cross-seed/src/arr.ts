@@ -280,78 +280,25 @@ export async function scanAllArrsForMedia(
 	mediaType: MediaType,
 	searcheePath?: string,
 ): Promise<Result<ParsedMedia, boolean>> {
-	// Log build info for debugging (first call only)
-	if (!process.env.BRANCH_LOGGED) {
-		logger.debug({
-			label: Label.ARRS,
-			message: `Running build: ${process.env.BUILD_BRANCH || "unknown"} (${process.env.BUILD_COMMIT_SHA?.substring(0, 7) || "unknown"})`,
-		});
-		process.env.BRANCH_LOGGED = "true";
-	}
-
 	// First, try parsing IDs from filename and folder path as fallback
 	const title =
 		mediaType !== MediaType.VIDEO
 			? searcheeTitle.match(SCENE_TITLE_REGEX)!.groups!.title
 			: cleanseSeparators(stripMetaFromName(searcheeTitle));
 
-	logger.debug({
-		label: Label.ARRS,
-		message: `scanAllArrsForMedia called with title: "${searcheeTitle}", path: "${searcheePath || "undefined"}"`,
-	});
-
 	const filenameIds = parseMediaIdsFromString(searcheeTitle);
 	let folderIds: ExternalIds = {};
 	if (searcheePath) {
-		// Extract folder name from path (works with both Unix and Windows paths)
 		// Extract parent folder name from path (works with both Unix and Windows paths)
-		// Get the parent directory that contains the media ID, not the filename
 		const pathSeparator = searcheePath.includes("/") ? "/" : "\\";
 		const pathParts = searcheePath.split(pathSeparator);
 		// Remove the last element (filename) to get the parent folder
 		pathParts.pop();
 		const folderName = pathParts.pop() || searcheePath;
-		logger.debug({
-			label: Label.ARRS,
-			message: `Extracting parent folder name: ${folderName} from path: ${searcheePath}`,
-		});
 		folderIds = parseMediaIdsFromString(folderName);
-		logger.debug({
-			label: Label.ARRS,
-			message: `Parent folder IDs found: ${Object.keys(folderIds).length > 0 ? formatFoundIds(folderIds) : "NONE"}`,
-		});
-
-		// Also extract from filename for robustness
-		const filenameParts = searcheePath.split(pathSeparator);
-		const filename = filenameParts[filenameParts.length - 1];
-		const filenameIds = parseMediaIdsFromString(filename);
-		logger.debug({
-			label: Label.ARRS,
-			message: `Filename from path IDs found: ${Object.keys(filenameIds).length > 0 ? formatFoundIds(filenameIds) : "NONE"}`,
-		});
-		logger.debug({
-			label: Label.ARRS,
-			message: `Extracting folder name: ${folderName} from path: ${searcheePath}`,
-		});
-		folderIds = parseMediaIdsFromString(folderName);
-		logger.debug({
-			label: Label.ARRS,
-			message: `Folder IDs found: ${Object.keys(folderIds).length > 0 ? formatFoundIds(folderIds) : "NONE"}`,
-		});
-	} else {
-		logger.debug({
-			label: Label.ARRS,
-			message: `No folder path provided for ${searcheeTitle}`,
-		});
 	}
 	// Merge IDs: filename takes precedence over folder for same ID type
 	const parsedIds = { ...folderIds, ...filenameIds };
-
-	// Log what we found from parsing
-	logger.debug({
-		label: Label.ARRS,
-		message: `Filename IDs: ${Object.keys(filenameIds).length > 0 ? formatFoundIds(filenameIds) : "NONE"}`,
-	});
 
 	// If we got IDs from parsing, create a ParsedMedia object
 	if (Object.values(parsedIds).some(isTruthy)) {

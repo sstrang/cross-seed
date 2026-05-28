@@ -837,10 +837,6 @@ export default class QBittorrent implements TorrentClient {
 			}
 			const title = parseTitle(name, files) ?? name;
 			const length = torrent.total_size;
-			logger.debug({
-				label: this.label,
-				message: `Creating searchee with name: "${name}", savePath: "${savePath}", computed path: "${savePath && name ? path.join(savePath, name) : "undefined"}"`,
-			});
 			const searchee: SearcheeClient = {
 				infoHash,
 				name,
